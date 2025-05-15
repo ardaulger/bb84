@@ -4,7 +4,7 @@ import pandas as pd
 
 # Streamlit ayarları
 st.set_page_config(page_title="BB84 Kuantum Kriptografi Simülasyonu", layout="centered")
-st.title("🔐 Devlet Bahçeli Fen Lisesi \n 4006 Tübitak Bilim Fuarı \n BB84 Kuantum Kriptografi Simülasyonu")
+st.title("🔐 BB84 Kuantum Kriptografi Simülasyonu \nDevlet Bahçeli Fen Lisesi \n 4006 Tübitak Bilim Fuarı")
 
 # Rastgele bit üret
 @st.cache_data
