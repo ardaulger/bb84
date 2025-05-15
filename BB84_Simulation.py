@@ -1,82 +1,105 @@
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Button
+import streamlit as st
 import numpy as np
+import matplotlib.pyplot as plt
 import time
 
-fig, ax = plt.subplots()
-plt.subplots_adjust(bottom=0.2)
-ax.set_axis_off()
+# Streamlit ayarları
+st.set_page_config(page_title="BB84 Kuantum Kriptografi Simülasyonu", layout="centered")
+st.title("🔐 BB84 Kuantum Kriptografi Simülasyonu")
 
-def run_simulation(event=None):
-    ax.clear()
-    ax.set_axis_off()
-    ax.set_title("BB84 Kuantum Kriptografi Simülasyonu\n", fontsize=14)
+# Rastgele bit üret
+@st.cache_data
+def generate_random_bits(length):
+    return np.random.randint(0, 2, length)
 
-    n = 10
-    alice_bits = np.random.randint(0, 2, n)
-    alice_bases = np.random.choice(['+', 'x'], n)
-    bob_bases = np.random.choice(['+', 'x'], n)
-    eva_is_listening = np.random.choice([True, False])
+# Rastgele temel üret
+@st.cache_data
+def generate_random_bases(length):
+    return np.random.choice(['+', 'x'], length)
 
+# Qubit hazırla
+def prepare_qubits(bits, bases):
     qubits = []
-    for bit, base in zip(alice_bits, alice_bases):
+    for bit, base in zip(bits, bases):
         if base == '+':
             qubits.append('|0⟩' if bit == 0 else '|1⟩')
         else:
             qubits.append('|+⟩' if bit == 0 else '|-⟩')
+    return qubits
 
-    eva_qubits = list(qubits)  # Eva'nın etkilediği qubit'ler
-    if eva_is_listening:
-        eva_qubits = []
-        for q in qubits:
-            # Eva ölçüm yaparsa bazen bozabilir
-            if q in ['|0⟩', '|1⟩']:
-                eva_qubits.append('|0⟩' if np.random.rand() < 0.5 else '|1⟩')
+# Eva müdahale etsin mi?
+def eva_intervention(qubits, probability):
+    intercepted = []
+    for q in qubits:
+        if np.random.rand() < probability:
+            # Rastgele ölçüm ve yeniden gönderme
+            rand_base = np.random.choice(['+', 'x'])
+            bit = np.random.randint(0, 2)
+            if rand_base == '+':
+                intercepted.append('|0⟩' if bit == 0 else '|1⟩')
             else:
-                eva_qubits.append('|+⟩' if np.random.rand() < 0.5 else '|-⟩')
-
-    bob_bits = []
-    for q, base in zip(eva_qubits, bob_bases):
-        if base == '+':
-            bob_bits.append(0 if q == '|0⟩' else 1 if q == '|1⟩' else np.random.randint(0, 2))
+                intercepted.append('|+⟩' if bit == 0 else '|-⟩')
         else:
-            bob_bits.append(0 if q == '|+⟩' else 1 if q == '|-⟩' else np.random.randint(0, 2))
+            intercepted.append(q)
+    return intercepted
 
-    # Görselleştirme
-    for i in range(n):
-        y = 1 - i * 0.07
-        ax.text(0.1, y, f"Alice: Bit={alice_bits[i]} Base={alice_bases[i]}", fontsize=10)
-        # Eva etkisiyle bozulmuş mu?
-        if eva_is_listening and qubits[i] != eva_qubits[i]:
-            color = 'red'  # Bozulmuş qubit
+# Ölçüm
+def measure_qubits(qubits, bases):
+    measured_bits = []
+    for qubit, base in zip(qubits, bases):
+        if (qubit in ['|0⟩', '|1⟩']) and base == '+':
+            measured_bits.append(0 if qubit == '|0⟩' else 1)
+        elif (qubit in ['|+⟩', '|-⟩']) and base == 'x':
+            measured_bits.append(0 if qubit == '|+⟩' else 1)
         else:
-            color = 'black'
-        ax.text(0.4, y, f"Qubit={eva_qubits[i]}", fontsize=10, color=color)
-        ax.text(0.7, y, f"Bob: Base={bob_bases[i]} -> Bit={bob_bits[i]}", fontsize=10)
-        plt.pause(0.5)
-    
-    alice_bases = np.array(alice_bases)
-    bob_bases = np.array(bob_bases)
-    alice_bits = np.array(alice_bits)
-    bob_bits = np.array(bob_bits)
-    mask = alice_bases == bob_bases
-    shared_key = alice_bits[mask]
-    bob_key = bob_bits[mask]
+            measured_bits.append(np.random.randint(0, 2))
+    return measured_bits
 
-    ax.text(0.1, -0.05, f"Eva dinledi mi? {'Evet' if eva_is_listening else 'Hayır'}", fontsize=12, color='blue')
+# Filtreleme
+def filter_key(alice_bases, bob_bases, alice_bits, bob_bits):
+    key_indices = alice_bases == bob_bases
+    filtered_key = alice_bits[key_indices]
+    bob_filtered_key = bob_bits[key_indices]
+    return filtered_key, bob_filtered_key
+
+# Simülasyonu çalıştır
+if st.button("🚀 Simülasyonu Başlat"):
+    n = 10
+    eva_listens = np.random.choice([True, False])
+    st.write("## 1️⃣ Alice bitleri ve temelleri oluşturuyor...")
+    alice_bits = generate_random_bits(n)
+    alice_bases = generate_random_bases(n)
+    st.write("Bitler:", alice_bits)
+    st.write("Temeller:", alice_bases)
+
+    st.write("## 2️⃣ Alice qubit'leri hazırlıyor...")
+    qubits = prepare_qubits(alice_bits, alice_bases)
+    st.write("Qubit'ler:", qubits)
+
+    st.write("## 3️⃣ Eva dinliyor mu?:", "🕵️‍♀️ Evet" if eva_listens else "✅ Hayır")
+    if eva_listens:
+        qubits = eva_intervention(qubits, probability=0.5)
+
+    st.write("## 4️⃣ Bob temelleriyle ölçüm yapıyor...")
+    bob_bases = generate_random_bases(n)
+    bob_bits = measure_qubits(qubits, bob_bases)
+    st.write("Bob'un Temelleri:", bob_bases)
+    st.write("Bob'un Ölçtüğü Bitler:", bob_bits)
+
+    st.write("## 5️⃣ Anahtarlar karşılaştırılıyor...")
+    alice_bases_np = np.array(alice_bases)
+    bob_bases_np = np.array(bob_bases)
+    alice_bits_np = np.array(alice_bits)
+    bob_bits_np = np.array(bob_bits)
+
+    shared_key, bob_key = filter_key(alice_bases_np, bob_bases_np, alice_bits_np, bob_bits_np)
+
+    st.write("Alice'in Ortak Anahtarı:", shared_key)
+    st.write("Bob'un Ortak Anahtarı:", bob_key)
+
     if np.array_equal(shared_key, bob_key):
-        ax.text(0.1, -0.12, f"Anahtarlar uyuşuyor!", fontsize=12, color='green')
+        st.success("✅ Anahtarlar uyuşuyor. Güvenli iletişim mümkün.")
     else:
-        ax.text(0.1, -0.12, f"Anahtarlar uyuşmuyor!", fontsize=12, color='red')
+        st.error("⚠️ Anahtarlar uyuşmuyor. Eva iletişimi dinlemiş olabilir!")
 
-    ax.text(0.1, -0.2, "10 saniye içinde yeniden başlatabilirsiniz...", fontsize=10, color='gray')
-    plt.draw()
-    time.sleep(10)
-
-# Buton
-button_ax = plt.axes([0.4, 0.05, 0.2, 0.075])
-button = Button(button_ax, 'Yeniden Başlat')
-button.on_clicked(run_simulation)
-
-run_simulation()
-plt.show()
+    st.info("Simülasyon 10 saniye sonra yeniden başlatılabilir.")
