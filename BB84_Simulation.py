@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 # Streamlit ayarları
-st.set_page_config(page_title="Devlet Bahçeli Fen Lisesi \n 4006 TÜBİTAK BİLİM FUARI \n BB84 Kuantum Kriptografi Simülasyonu", layout="centered")
-st.title("🔐 BB84 Kuantum Kriptografi Simülasyonu")
+st.set_page_config(page_title="BB84 Kuantum Kriptografi Simülasyonu", layout="centered")
+st.title("🔐 Devlet Bahçeli Fen Lisesi \n 4006 Tübitak Bilim Fuarı \n BB84 Kuantum Kriptografi Simülasyonu")
 
 # Rastgele bit üret
 @st.cache_data
