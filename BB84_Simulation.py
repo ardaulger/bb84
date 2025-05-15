@@ -1,6 +1,5 @@
 import streamlit as st
 import numpy as np
-import time
 
 # Streamlit ayarları
 st.set_page_config(page_title="BB84 Kuantum Kriptografi Simülasyonu", layout="centered")
@@ -65,37 +64,61 @@ def filter_key(alice_bases, bob_bases, alice_bits, bob_bits):
 if st.button("🚀 Simülasyonu Başlat"):
     n = 10
     eva_listens = np.random.choice([True, False])
-    st.write("## 1️⃣ Alice bitleri ve temelleri oluşturuyor...")
+    
+    # 1️⃣ Alice bitleri ve temelleri
+    st.subheader("1️⃣ Alice Bitleri ve Temelleri")
     alice_bits = generate_random_bits(n)
     alice_bases = generate_random_bases(n)
-    st.write("Bitler:", alice_bits)
-    st.write("Temeller:", alice_bases)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**🔢 Alice Bitleri**")
+        st.write(alice_bits)
+    with col2:
+        st.markdown("**📐 Alice Temelleri**")
+        st.write(alice_bases)
 
-    st.write("## 2️⃣ Alice qubit'leri hazırlıyor...")
+    # 2️⃣ Qubit hazırlama
+    st.subheader("2️⃣ Alice Qubit'leri Hazırlıyor")
     qubits = prepare_qubits(alice_bits, alice_bases)
-    st.write("Qubit'ler:", qubits)
+    st.write(qubits)
 
-    st.write("## 3️⃣ Eva dinliyor mu?:", "🕵️‍♀️ Evet" if eva_listens else "✅ Hayır")
+    # 3️⃣ Eva dinliyor mu?
+    st.subheader("3️⃣ Eva Dinliyor mu?")
+    st.write("🕵️‍♀️ Evet" if eva_listens else "✅ Hayır")
     if eva_listens:
         qubits = eva_intervention(qubits, probability=0.5)
+        st.markdown("💥 **Qubit'ler Eva tarafından müdahaleye uğradı.**")
 
-    st.write("## 4️⃣ Bob temelleriyle ölçüm yapıyor...")
+    # 4️⃣ Bob'un ölçümü
+    st.subheader("4️⃣ Bob Temelleriyle Ölçüm Yapıyor")
     bob_bases = generate_random_bases(n)
     bob_bits = measure_qubits(qubits, bob_bases)
-    st.write("Bob'un Temelleri:", bob_bases)
-    st.write("Bob'un Ölçtüğü Bitler:", bob_bits)
+    col3, col4 = st.columns(2)
+    with col3:
+        st.markdown("**📐 Bob Temelleri**")
+        st.write(bob_bases)
+    with col4:
+        st.markdown("**🔍 Bob Ölçülen Bitler**")
+        st.write(bob_bits)
 
-    st.write("## 5️⃣ Anahtarlar karşılaştırılıyor...")
+    # 5️⃣ Anahtar karşılaştırması
+    st.subheader("5️⃣ Anahtar Karşılaştırması")
     alice_bases_np = np.array(alice_bases)
     bob_bases_np = np.array(bob_bases)
     alice_bits_np = np.array(alice_bits)
     bob_bits_np = np.array(bob_bits)
 
     shared_key, bob_key = filter_key(alice_bases_np, bob_bases_np, alice_bits_np, bob_bits_np)
+    
+    col5, col6 = st.columns(2)
+    with col5:
+        st.markdown("**🔐 Alice'in Ortak Anahtarı**")
+        st.write(shared_key)
+    with col6:
+        st.markdown("**🔐 Bob'un Ortak Anahtarı**")
+        st.write(bob_key)
 
-    st.write("Alice'in Ortak Anahtarı:", shared_key)
-    st.write("Bob'un Ortak Anahtarı:", bob_key)
-
+    # Güvenlik kontrolü
     if np.array_equal(shared_key, bob_key):
         st.success("✅ Anahtarlar uyuşuyor. Güvenli iletişim mümkün.")
     else:
